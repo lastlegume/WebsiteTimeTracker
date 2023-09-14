@@ -1,4 +1,4 @@
-# Website Time Tracker - An extension for Firefox
+# Website Time Tracker
 
 <div style="text-align: center">  
 <a href = "https://addons.mozilla.org/en-US/firefox/addon/website-time-tracker/"><img src = "/assets/images/get-the-addon.webp" title = "Get the extension"></a>
