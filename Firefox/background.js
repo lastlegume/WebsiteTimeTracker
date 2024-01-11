@@ -84,6 +84,7 @@ async function logTabs(tabs) {
         browser.storage.local.set({ 'initdate': temp['initdate'] });
         let d = await browser.storage.local.get({ 'date': 0 });
         d = d['date'];
+        browser.storage.local.set({ 'date': numDate });
         if (d != numDate) {
             let vals = await browser.storage.local.get();
             vals = Object.keys(vals);
@@ -114,7 +115,6 @@ async function logTabs(tabs) {
                 }
             }
             //console.log(week);
-            browser.storage.local.set({ 'date': numDate });
             var timeForWeek = await browser.storage.local.get({ ['week' + numDate]: [] });
             // console.log(Object.values(timeForWeek));
             if (Object.values(timeForWeek).length > 0) {
