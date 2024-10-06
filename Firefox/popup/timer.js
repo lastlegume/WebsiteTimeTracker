@@ -243,11 +243,10 @@ async function show(s) {
             times.push(vals[i][0]);
             secs.push(vals[i][1]);
         }
-
+        let sum = 0;
+        for (let i = 0; i < secs.length; i++)
+            sum += secs[i];
         if (type.includes("Average") && numDays != 0) {
-            let sum = 0;
-            for (let i = 0; i < secs.length; i++)
-                sum += secs[i];
             for (let i = 0; i < secs.length; i++)
                 secs[i] = ((secs[i] / sum) * 100).toFixed(2);
         }
