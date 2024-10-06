@@ -34,7 +34,7 @@ async function show(s) {
             vals.push([vals2[i][0].substring(3), vals2[i][1]]);
         else if (vals2[i][0].substring(0, 3) === "d##" && type === 'wTime for Each Website Today')
             vals.push([vals2[i][0].substring(3), vals2[i][1]]);
-        else if (vals2[i][0] === "week"+(curDate-1) && type === 'wTime for Each Website Yesterday')
+        else if (vals2[i][0] === "week" + (curDate - 1) && type === 'wTime for Each Website Yesterday')
             vals = vals2[i][1];
         else if (vals2[i][0].substring(0, 3) === "m##" && type === 'wTime for Each Website This Month')
             vals.push([vals2[i][0].substring(3), vals2[i][1]]);
@@ -49,6 +49,7 @@ async function show(s) {
         else if (vals2[i][0] === "date")
             curDate = vals2[i][1] + 1;
     }
+    //vals appears to be an array of [site, time] pairs
     var error = document.getElementById("error");
     error.textContent = "";
     if (vals.length == 0) {
@@ -60,12 +61,12 @@ async function show(s) {
             error.textContent = "Error: No data"
         return;
     }
-    if (type === 'wTime for Each Website Yesterday'){
-        for(let i =0;i<vals.length;i++){
-            vals[i]=Object.entries(vals[i])[0];
+    if (type === 'wTime for Each Website Yesterday') {
+        for (let i = 0; i < vals.length; i++) {
+            vals[i] = Object.entries(vals[i])[0];
         }
     }
-    
+
     if (type === 'wTime for Each Website This Week') {
         var weekSites = [];
         for (let i = 0; i < vals.length; i++) {
@@ -102,15 +103,15 @@ async function show(s) {
             }
         }
     }
-  //  console.log(vals);
+    //  console.log(vals);
 
     var canvas = document.getElementById("myChart");
     let numDays = curDate - initDate;
     if (canvas != null)
         canvas.parentNode.removeChild(canvas);
     var numShown = await browser.storage.local.get("numDisplayed");
-    numShown = numShown['numDisplayed']-1;
-  //  console.log(numShown);
+    numShown = numShown['numDisplayed'] - 1;
+    //  console.log(numShown);
     if (isNaN(numShown))
         numShown = 9;
     const can = document.createElement('canvas');
@@ -160,19 +161,19 @@ async function show(s) {
 
         var colors = ['#ff595e', '#ff924c', '#ffca3a', '#c5ca30', '#8ac926', '#52a675', '#1982c4', '#5685dd', '#967bb9', '#b5a6c9'];
         var letters = "0123456789ABCDEF";
-        for (let nCs = 0; nCs < numShown -10; nCs++) {
+        for (let nCs = 0; nCs < numShown - 10; nCs++) {
             let col = "#";
             for (let j = 0; j < 6; j++) {
                 col += letters[Math.floor(Math.random() * 16)];
             }
             colors.push(col);
         }
-//        console.log(colors);
+        //        console.log(colors);
 
 
         type = createReadableTime(sum) + " - " + type.substring(1);
         for (let i = 0; i < numShown + 1 && i < sec.length; i++)
-            sec[i] = Math.round((sec[i] / sum) * 10000) / 100;
+            sec[i] = ((sec[i] / sum) * 100).toFixed(2);
         const graph = new Chart(can, {
             type: "pie",
             data: {
@@ -229,7 +230,8 @@ async function show(s) {
     else {
         let times = [];
         let secs = [];
-        vals.sort((a, b) => { return parseInt(a[0], 10) - parseInt(b[0], 10) });
+        vals.sort((a, b) => { return a[0] * 1 - b[0] * 1 });
+        console.log(vals);
         if (type.includes("Average") && numDays != 0) {
             for (let i = 0; i < vals.length; i++)
                 vals[i] = [vals[i][0], Math.round(vals[i][1] / numDays)];
@@ -242,12 +244,13 @@ async function show(s) {
             secs.push(vals[i][1]);
         }
 
-
-        let sum = 0;
-        for (let i = 0; i < secs.length; i++)
-            sum += secs[i];
-        for (let i = 0; i < secs.length; i++)
-            secs[i] = Math.round((secs[i] / sum) * 10000) / 100;
+        if (type.includes("Average") && numDays != 0) {
+            let sum = 0;
+            for (let i = 0; i < secs.length; i++)
+                sum += secs[i];
+            for (let i = 0; i < secs.length; i++)
+                secs[i] = ((secs[i] / sum) * 100).toFixed(2);
+        }
         let colors = ['#FF0000', '#FF4000', '#FF8000', '#FFC000', '#FFFF00', '#D5FF00', '#AAFF00', '#80FF00', '#40FF00', '#00FF00', '#00FF40', '#00FF80', '#00FFC0', '#00FFFF', '#00C0FF', '#0080FF', '#0040FF', '#0000FF', '#4000FF', '#8000FF', '#C000FF', '#FF00FF', '#FF00C0', '#FF0080'];
         const graph = new Chart(can, {
             type: "bar",
@@ -270,7 +273,7 @@ async function show(s) {
                         },
                         scaleLabel: {
                             display: true,
-                            labelString: 'Percent of Time'
+                            labelString: type.includes("Average") ? 'Percent of Time' : 'Total Time (seconds)'
                         }
                     }],
                     xAxes: [{
@@ -291,7 +294,7 @@ async function show(s) {
                 tooltips: {
                     callbacks: {
                         label: function (tooltipItems, data) {
-                            return tooltipItems.yLabel + '%';
+                            return type.includes("Average")?(tooltipItems.yLabel + '%'):`${createReadableTime(tooltipItems.yLabel)} (${(tooltipItems.yLabel>99999?(tooltipItems.yLabel).toExponential(2):tooltipItems.yLabel)}s)`;
                         }
                     }
 

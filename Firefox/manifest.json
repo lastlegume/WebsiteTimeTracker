@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Website Time Tracker",
-  "version": "2.3.8",
+  "version": "2.3.9",
   "description": "Keeps track of when and where you spend your time",
   "icons": {
     "30": "icons/stopwatch.png"
