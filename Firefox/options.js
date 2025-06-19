@@ -27,9 +27,11 @@ document.querySelector("form").addEventListener("submit", saveOptions);
 document.getElementById("export").addEventListener("click", exportData);
 document.getElementById("import").addEventListener("click", importData);
 
+let importResponse = document.getElementById("importResponse");
+
 async function exportData() {
   let storage = await browser.storage.local.get();
-  var file = new File([JSON.stringify(storage)], 'latex.txt', {
+  var file = new File([JSON.stringify(storage)], 'export.txt', {
     type: 'text/plain',
   })
   download();
@@ -48,6 +50,20 @@ async function exportData() {
 }
 
 async function importData(){
+  let importFileInput = document.getElementById("importFile");
+  if(importFileInput.value===""){
+    importResponse.innerText = "Import failed. Please add a file to import";
+    return;
+  }
+  let f = importFileInput.files[0];
+  let text = (new FileReader()).readAsText(f);
+  console.log(text);
+  try {
+    data = JSON.parse(text);
+  } catch (error) {
+    importResponse.innerText = "Import failed. Please add a valid file to import. The file must be in a .txt or .json format as in by the export.";
+    return;
+  }
 
 }
 
