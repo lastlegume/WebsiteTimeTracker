@@ -11,14 +11,16 @@
     <h1>Website Time Tracker Settings</h1>
     <form>
         <div class="slidecontainer">
-            <label>Number of Sites Displayed (default: 10)   <input type="number"id="numDisplayed"value=10></label>
-            <br><label>Day End Time (default: 12:00 AM)   <input type="time"id="endTime"value=00:00></label>            
+            <label>Number of Sites Displayed (default: 10) <input type="number" id="numDisplayed" value=10></label>
+            <br><label>Day End Time (default: 12:00 AM) <input type="time" id="endTime" value=00:00></label>
             <br><button type="submit">Save</button>
             <button type="reset">Reset</button>
-            <button id = "export">Export data</button>
-            <p>It is highly recommended that you export any data before importing new data to avoid losing any information.</p>
-            <button id = "import">Import data from file</button><input type="file" id="import" accept=".json,.txt">
-            
+            <button id="export">Export data</button>
+            <p>It is highly recommended that you export any data before importing new data to avoid losing any
+                information. Imported data will be added to existing local data. Thus, repeated imports will add the
+                same time data multiple times.</p>
+            <button id="import">Import data from file</button><input type="file" id="import" accept=".json,.txt">
+                <p id="importResponse"></p>
         </div>
     </form>
     <script src="options.js" defer></script>
