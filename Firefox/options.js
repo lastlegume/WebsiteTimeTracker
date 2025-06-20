@@ -6,20 +6,12 @@ function saveOptions(e) {
   });
 }
 function restoreOptions() {
-  function setCurrentChoice(result) {
-    document.querySelector("#numDisplayed").value = result.numDisplayed || 10;
-    document.querySelector("#endTime").value = result.endTime || '00:00';
-    //   console.log(result.numDisplayed);
-  }
 
-  function onError(error) {
-    console.log(`Error: ${error}`);
-  }
+  browser.storage.local.get("numDisplayed").then((result)=>document.querySelector("#numDisplayed").value = result.numDisplayed || 10);
+  browser.storage.local.get("endTime").then((result)=>document.querySelector("#endTime").value = result.endTime || '00:00');
+  browser.storage.local.get("numPastDays").then((result)=>document.querySelector("#numPastDays").value = result.numPastDays || 7);
 
-  let getting = browser.storage.local.get("numDisplayed");
-  getting = browser.storage.local.get("endTime");
 
-  getting.then(setCurrentChoice, onError);
 }
 document.addEventListener("DOMContentLoaded", restoreOptions);
 document.querySelector("form").addEventListener("submit", saveOptions);
@@ -72,17 +64,22 @@ async function importData() {
   // console.log(data);
   let promises = [];
   let validData = [];
-  data = Object.entries(data);
   // TO DO: do some check to see if day or month is the day as existing data in storage
-  // let curDate = browser.storage.local.get({"date":0});
-  // let curMonth = browser.storage.local.get({"month":-1});
+  let curDate = await browser.storage.local.get({ "date": 0 });
+  let curMonth = await browser.storage.local.get({ "month": -1 });
+  // console.log(data)
+  // console.log(data["month"] + " " + curMonth["month"])
+  let isCorrectDate = data["date"] && data["date"] * 1 == curDate["date"]*1;
+  let isCorrectMonth = data["month"] && data["month"] * 1 == curMonth["month"]*1;
+  data = Object.entries(data);
 
 
   for (let [k, v] of data) {
     if (isValidKey(k)) {
       promises.push(browser.storage.local.get(k));
       validData.push([k, v]);
-    }    // console.log(k+" "+v);
+      //  console.log(k+" "+v);
+    }   
   }
 
 
@@ -92,6 +89,8 @@ async function importData() {
     //check if the key already exists
     if (typeof promises[i] === "object" && Object.keys(promises[i]).length !== 0) {
       if (validData[i][0].substring(0, 4) === "week") {
+        //reimplementation of "combine" function from background.js
+        // should be slightly more efficient but might be incorrect depending on the time used for the sort and indexof in the combine function
         let curWeek = promises[i][validData[i][0]].sort(((a, b) => { (Object.keys(a)[0].localeCompare(Object.keys(b)[0])) }));
         let impWeek = validData[i][1].sort(((a, b) => { (Object.keys(a)[0].localeCompare(Object.keys(b)[0])) }));
         let curKeys = curWeek.map((e) => Object.keys(e)[0]);
@@ -120,14 +119,14 @@ async function importData() {
         setPromises.push(browser.storage.local.set({
           [validData[i][0]]: curWeek
         }));
-        //if the key doesn't exist, add the whole object from the export into storage
       } else {
+        //sum the import and storage values if not week
         setPromises.push(browser.storage.local.set({
           [validData[i][0]]: (1 * validData[i][1] + 1 * promises[i][validData[i][0]])
         }));
       }
+    //if the key doesn't exist, add the whole object from the export into storage
     } else {
-      console.log(validData[i]);
       setPromises.push(browser.storage.local.set({
         [validData[i][0]]: validData[i][1]
       }));
@@ -135,14 +134,15 @@ async function importData() {
   }
   await Promise.allSettled(setPromises);
 
-  importResponse.innerText = "Import complete.";
+  importResponse.innerText = "Import complete. "+(isCorrectDate?"Imported data is from the same day, so the data was added to the daily time as well. ":"")+(isCorrectMonth?"Imported data is from the same month, so the data was added to the month's time as well." :"");
   importFileInput.value = "";
 
   function isValidKey(k) {
-    return k === "initdate" || k.substring(0, 3) === "w##" || k.substring(0, 3) === "m##" || k.substring(0, 3) === "t##" || k.substring(0, 4) === "week";
-    // no guarantee that the export is from the same day as the import - thus no need for the following checks
-    //|| k.substring(0, 3) === "d##"||k.substring(0, 3) === "t#d"
-    //assumes same month for now though
+    return k === "initdate" || k.substring(0, 3) === "w##" || (isCorrectMonth && k.substring(0, 3) === "m##")
+      || k.substring(0, 3) === "t##" || k.substring(0, 4) === "week"
+      || (isCorrectDate && (k.substring(0, 3) === "d##" || k.substring(0, 3) === "t#d"));
+    // no guarantee that the export is from the same day as the import - thus needs to check if month/day are the same and only import data if true
+
   }
 }
 
