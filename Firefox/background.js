@@ -38,12 +38,13 @@ The extension stores information about time spent. Because of the nature of the 
 
 ```d##[site]``` - time for the current day on site
 
-```week[day][site]``` - array of objects storing all of the sites and how much time was spent on them on day
+```week[day]``` - array of objects storing all of the sites and how much time was spent on them on day-1. For some reason, week[day] refers to the time spent on the date (day-1), and this won't be changed to maintain backwards compatibility.
 
 #### Special storage codes
 
 ```initdate``` - date index for the first day the extension is used. 
-```date``` - date index for the current day the extension is used. 
+```date``` - date index for the current day. 
+```month``` - month index for the current month. 
 
 
 */
@@ -112,6 +113,7 @@ async function logTabs(tabs) {
     }
     try {
         let temp = await browser.storage.local.get({ 'initdate': numDate });
+        //I think the next line is redundant, but I don't want to change it in case it isn't
         browser.storage.local.set({ 'initdate': temp['initdate'] });
         let d = await browser.storage.local.get({ 'date': 0 });
         d = d['date'];
@@ -148,6 +150,7 @@ async function logTabs(tabs) {
                 }
             }
             //console.log(week);
+            //it would make a lot more sense if 
             var timeForWeek = await browser.storage.local.get({ ['week' + numDate]: [] });
             // console.log(Object.values(timeForWeek));
             if (Object.values(timeForWeek).length > 0) {
