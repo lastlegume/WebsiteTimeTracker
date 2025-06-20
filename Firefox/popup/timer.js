@@ -15,7 +15,7 @@ avgButton.addEventListener('click', () => show('wAverage Time for Each Website')
 dayButton.addEventListener('click', () => show('wTime for Each Website Today'));
 prevButton.addEventListener('click', () => show('wTime for Each Website Yesterday'));
 monthButton.addEventListener('click', () => show('wTime for Each Website This Month'));
-weekButton.addEventListener('click', () => show('wTime for Each Website This Week'));
+weekButton.addEventListener('click', () => show('wTime for Each Website This Week')); //later changed to the last n days
 htotalButton.addEventListener('click', () => show('Total Time by Hour'));
 havgButton.addEventListener('click', () => show('Average Time by Hour'));
 hdayButton.addEventListener('click', () => show('Total Time Today by Hour'));
@@ -31,13 +31,13 @@ async function show(s) {
     let curDate, initDate;
     for (let i = 0; i < vals2.length; i++) {
         // if the key has null as the value
-        if(!vals2[i][1])
+        if (!vals2[i][1])
             await browser.storage.local.remove(vals2[i][0]);
         if (vals2[i][0].substring(0, 3) === "w##" && (type === 'wTotal Time for Each Website' || type === 'wAverage Time for Each Website'))
             vals.push([vals2[i][0].substring(3), vals2[i][1]]);
         else if (vals2[i][0].substring(0, 3) === "d##" && type === 'wTime for Each Website Today')
             vals.push([vals2[i][0].substring(3), vals2[i][1]]);
-        else if (vals2[i][0] === "week" + (curDate - 1) && type === 'wTime for Each Website Yesterday')
+        else if (vals2[i][0] === "week" + (curDate - 1) && type === 'wTime for Each Website Yesterday') //subtract 1 to account for the addition of 1 when curDate is set
             vals = vals2[i][1];
         else if (vals2[i][0].substring(0, 3) === "m##" && type === 'wTime for Each Website This Month')
             vals.push([vals2[i][0].substring(3), vals2[i][1]]);
@@ -50,10 +50,10 @@ async function show(s) {
         else if (vals2[i][0] === "initdate")
             initDate = vals2[i][1];
         else if (vals2[i][0] === "date")
-            curDate = vals2[i][1] + 1;
+            curDate = vals2[i][1] + 1; //1 is added to curDate to correct the total number of days in the total or average time viewers 
     }
     //vals appears to be an array of [site, time] pairs
-    
+
     error.textContent = "";
     if (vals.length == 0) {
         if (type === 'wTime for Each Website This Week')
@@ -77,8 +77,6 @@ async function show(s) {
                 weekSites.push(vals[i][1][j]);
             }
         }
-        // weekSites = Object.assign({}, ...weekSites);
-        //console.log(weekSites);
         weekvals = [];
         weekkeys = [];
         for (let i = 0; i < weekSites.length; i++) {
