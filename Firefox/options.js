@@ -49,21 +49,100 @@ async function exportData() {
   }
 }
 
-async function importData(){
+async function importData() {
   let importFileInput = document.getElementById("importFile");
-  if(importFileInput.value===""){
+  importResponse.innerText = "";
+
+  if (importFileInput.value === "") {
     importResponse.innerText = "Import failed. Please add a file to import";
     return;
   }
   let f = importFileInput.files[0];
-  let text = (new FileReader()).readAsText(f);
-  console.log(text);
+  let text = await f.text()//(new FileReader()).readAsText(f);
   try {
     data = JSON.parse(text);
   } catch (error) {
-    importResponse.innerText = "Import failed. Please add a valid file to import. The file must be in a .txt or .json format as in by the export.";
+    importResponse.innerText = "Import failed. Please add a valid file to import. The file must be in JSON format and either a .txt or .json file as in the export.";
+    importFileInput.value = "";
     return;
   }
 
+  importResponse.innerText = "Import in progress... Do not close this tab or turn off your device.";
+  importFileInput.value = "";
+  // console.log(data);
+  let promises = [];
+  let validData = [];
+  data = Object.entries(data);
+  // TO DO: do some check to see if day or month is the day as existing data in storage
+  // let curDate = browser.storage.local.get({"date":0});
+  // let curMonth = browser.storage.local.get({"month":-1});
+
+
+  for (let [k, v] of data) {
+    if (isValidKey(k)) {
+      promises.push(browser.storage.local.get(k));
+      validData.push([k, v]);
+    }    // console.log(k+" "+v);
+  }
+
+
+  promises = await Promise.all(promises)
+  let setPromises = [];
+  for (let i = 0; i < promises.length; i++) {
+    //check if the key already exists
+    if (typeof promises[i] === "object" && Object.keys(promises[i]).length !== 0) {
+      if (validData[i][0].substring(0, 4) === "week") {
+        let curWeek = promises[i][validData[i][0]].sort(((a, b) => { (Object.keys(a)[0].localeCompare(Object.keys(b)[0])) }));
+        let impWeek = validData[i][1].sort(((a, b) => { (Object.keys(a)[0].localeCompare(Object.keys(b)[0])) }));
+        let curKeys = curWeek.map((e) => Object.keys(e)[0]);
+        //iterate over the array that is being imported
+        let minIdx = -1;
+        for (let j = 0; j < impWeek.length; j++) {
+          //check if the element is already in the storage week list
+          let idx = -1;
+          let impKey = Object.keys(impWeek[j])[0];
+          for (let a = minIdx; a < curKeys.length; a++) {
+            if (curKeys[a] === impKey) {
+              idx = a;
+              break;
+            }
+          }
+          //else: add the element from the imported array to the storage list.
+          if (idx == -1)
+            curWeek.push(impWeek[j])
+          else {
+            //if so: add time from imported list to the storage time
+            curWeek[idx][impKey] = impWeek[j][impKey] * 1 + 1 * curWeek[idx][impKey];
+            minIdx = idx;
+          }
+
+        }
+        setPromises.push(browser.storage.local.set({
+          [validData[i][0]]: curWeek
+        }));
+        //if the key doesn't exist, add the whole object from the export into storage
+      } else {
+        setPromises.push(browser.storage.local.set({
+          [validData[i][0]]: (1 * validData[i][1] + 1 * promises[i][validData[i][0]])
+        }));
+      }
+    } else {
+      console.log(validData[i]);
+      setPromises.push(browser.storage.local.set({
+        [validData[i][0]]: validData[i][1]
+      }));
+    }
+  }
+  await Promise.allSettled(setPromises);
+
+  importResponse.innerText = "Import complete.";
+  importFileInput.value = "";
+
+  function isValidKey(k) {
+    return k === "initdate" || k.substring(0, 3) === "w##" || k.substring(0, 3) === "m##" || k.substring(0, 3) === "t##" || k.substring(0, 4) === "week";
+    // no guarantee that the export is from the same day as the import - thus no need for the following checks
+    //|| k.substring(0, 3) === "d##"||k.substring(0, 3) === "t#d"
+    //assumes same month for now though
+  }
 }
 

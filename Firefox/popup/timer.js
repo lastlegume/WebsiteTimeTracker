@@ -21,7 +21,7 @@ havgButton.addEventListener('click', () => show('Average Time by Hour'));
 hdayButton.addEventListener('click', () => show('Total Time Today by Hour'));
 options.addEventListener('click', () => open());
 
-
+var error = document.getElementById("error");
 
 async function show(s) {
     let type = s;
@@ -30,6 +30,9 @@ async function show(s) {
     let vals = [];
     let curDate, initDate;
     for (let i = 0; i < vals2.length; i++) {
+        // if the key has null as the value
+        if(!vals2[i][1])
+            await browser.storage.local.remove(vals2[i][0]);
         if (vals2[i][0].substring(0, 3) === "w##" && (type === 'wTotal Time for Each Website' || type === 'wAverage Time for Each Website'))
             vals.push([vals2[i][0].substring(3), vals2[i][1]]);
         else if (vals2[i][0].substring(0, 3) === "d##" && type === 'wTime for Each Website Today')
@@ -50,7 +53,7 @@ async function show(s) {
             curDate = vals2[i][1] + 1;
     }
     //vals appears to be an array of [site, time] pairs
-    var error = document.getElementById("error");
+    
     error.textContent = "";
     if (vals.length == 0) {
         if (type === 'wTime for Each Website This Week')
@@ -107,6 +110,11 @@ async function show(s) {
 
     var canvas = document.getElementById("myChart");
     let numDays = curDate - initDate;
+    if (numDays <= 0) {
+        numDays = 1;
+        error.textContent = "Error: Unable to calculate total number of days";
+
+    }
     if (canvas != null)
         canvas.parentNode.removeChild(canvas);
     var numShown = await browser.storage.local.get("numDisplayed");
@@ -293,7 +301,7 @@ async function show(s) {
                 tooltips: {
                     callbacks: {
                         label: function (tooltipItems, data) {
-                            return type.includes("Average")?(tooltipItems.yLabel + '%'):`${createReadableTime(tooltipItems.yLabel)} (${(tooltipItems.yLabel>99999?(tooltipItems.yLabel).toExponential(2):tooltipItems.yLabel)}s)`;
+                            return type.includes("Average") ? (tooltipItems.yLabel + '%') : `${createReadableTime(tooltipItems.yLabel)} (${(tooltipItems.yLabel > 99999 ? (tooltipItems.yLabel).toExponential(2) : tooltipItems.yLabel)}s)`;
                         }
                     }
 

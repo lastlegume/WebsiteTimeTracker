@@ -1,3 +1,5 @@
+// Runs every second, stores which website the user is on, what hour it is, and clears old data when necessary
+
 var currentId = -1;
 // browser.tabs.onActivated.addListener(() => {
 //         console.log('change');
@@ -19,6 +21,37 @@ function addTime() {
 function onError() {
     console.log("error");
 }
+
+/* 
+I was going to add this to the readme but it's excessive and serves better as a reference for the code.
+## Technical details
+### Storage
+The extension stores information about time spent. Because of the nature of the data stored, some amount of redundancy is required to accurately store all of the necessary information. The extension has separate counters for all time per website and all time per hour. Additionally, the extension stores data about the current month, daily usage per site, daily usage per hour, and usage for previous days, all of which are cleared periodically. Each type of data is stored with a specific prefix so that the program knows which type of data it is reading. 
+#### Prefixes
+```t##[day][site]``` amount of time spent on the browser during the hour during all time
+
+```t#d[day][site]``` - amount of time spent on the browser during the hour on the current day
+
+```w##[site]``` - all time spent on site
+
+```m##[site]``` - time for the current month on site
+
+```d##[site]``` - time for the current day on site
+
+```week[day][site]``` - array of objects storing all of the sites and how much time was spent on them on day
+
+#### Special storage codes
+
+```initdate``` - date index for the first day the extension is used. 
+```date``` - date index for the current day the extension is used. 
+
+
+*/
+
+
+
+
+
 async function logTabs(tabs) {
     if(currentId<0)
         return;
@@ -35,8 +68,6 @@ async function logTabs(tabs) {
     //change to make days 'Tfactor'x faster 
     let Tfactor = 1;//24 * 60 * 2;
     var numDate = Math.floor(Tfactor * (date - ((EThours * 60 + ETminutes * 1) + date.getTimezoneOffset()) * 60000) / 86400000);
-    //   console.log(((date-date.getTimezoneOffset()*60000)/3600000)%24);
-    //console.log(numDate);
     var numMonth = date.getMonth();
     try {
         let hour = "t##" + date.getHours();
@@ -90,9 +121,11 @@ async function logTabs(tabs) {
             vals = Object.keys(vals);
             for (let i = 0; i < vals.length; i++) {
                 let j = vals[i];
+                // removes relics from a previous version 
                 if (j.substring(0, 3) === "y##") {
                     browser.storage.local.remove([j]);
                 }
+                //clears data from the days more than 10 days before the current day
                 if (j.substring(0, 4) === 'week') {
                     let tempDate = j.substring(4);
                     if (tempDate - numDate < -10)
