@@ -21,6 +21,18 @@ havgButton.addEventListener('click', () => show('Average Time by Hour'));
 hdayButton.addEventListener('click', () => show('Total Time Today by Hour'));
 options.addEventListener('click', () => open());
 
+//set the last 7 days to the correct number
+var numPastDays;
+browser.storage.local.get("numPastDays").then(function (d) {
+    numPastDays = d.numPastDays;
+    if (isNaN(numPastDays))
+        numPastDays = 7;
+    numPastDays = Math.max(2, Math.min(numPastDays * 1, 15));
+    weekButton.innerText = `Last ${numPastDays} Days`;
+});
+
+
+
 var error = document.getElementById("error");
 
 async function show(s) {
@@ -71,10 +83,20 @@ async function show(s) {
     }
 
     if (type === 'wTime for Each Website This Week') {
+        numPastDays = await browser.storage.local.get("numPastDays");
+        numPastDays = numPastDays.numPastDays;
+        if (isNaN(numPastDays))
+            numPastDays = 7;
+        numPastDays = Math.max(2, Math.min(numPastDays * 1, 15))
+
+        type = `wTime for Each Website in the Past ${numPastDays} Days`;
+
         var weekSites = [];
         for (let i = 0; i < vals.length; i++) {
-            for (let j = 0; j < vals[i][1].length; j++) {
-                weekSites.push(vals[i][1][j]);
+            if (curDate - vals[i][0] <= numPastDays) {
+                for (let j = 0; j < vals[i][1].length; j++) {
+                    weekSites.push(vals[i][1][j]);
+                }
             }
         }
         weekvals = [];
@@ -116,13 +138,13 @@ async function show(s) {
     if (canvas != null)
         canvas.parentNode.removeChild(canvas);
     var numShown = await browser.storage.local.get("numDisplayed");
-    if(typeof numShown !== "number")
-        numShown = 10;
-    numShown = Math.max(3,Math.min(numShown,50))
     numShown = numShown['numDisplayed'] - 1;
     //  console.log(numShown);
     if (isNaN(numShown))
         numShown = 9;
+    numShown = Math.max(2, Math.min(numShown, 49))
+
+
     const can = document.createElement('canvas');
     can.id = "myChart";
     can.width = "500";

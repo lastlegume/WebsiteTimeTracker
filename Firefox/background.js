@@ -63,7 +63,7 @@ async function logTabs(tabs) {
     try {
         let endTime = await browser.storage.local.get({ 'endTime': '00:00' });
         var [EThours, ETminutes] = endTime['endTime'].split(':');
-        let numPastDays = await browser.storage.local.get({ 'numPastDays': '7' });
+        var numPastDays = await browser.storage.local.get({ 'numPastDays': '7' });
 
     } catch (error) {
         console.log(error);
@@ -162,7 +162,7 @@ async function logTabs(tabs) {
                 week = combine(week, Object.values(timeForWeek)[0]);
             }
             browser.storage.local.set({ ['week' + numDate]: week });
-            browser.storage.local.remove(['week' + (numDate - 7)]);
+            browser.storage.local.remove(['week' + (numDate - numPastDays)]);
         }
     }
     catch (error) {
