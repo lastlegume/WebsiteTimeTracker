@@ -11,18 +11,36 @@
     <h1>Website Time Tracker Settings</h1>
     <form>
         <div class="slidecontainer">
-            <label>Number of Sites Displayed (default: 10) <input type="number" id="numDisplayed" value=10></label>
+            <p>
+            <h3>General Settings </h3>
+                <label>Number of Sites Displayed (default: 10) <input type="number" id="numDisplayed" value=10 min="3" max="50"></label>
             <br><label>Day End Time (default: 12:00 AM) <input type="time" id="endTime" value=00:00></label>
+            <br><label>Number of days shown in the "Last n days" tab (default: 7) <input type="number" id="numPastDays" value=7 min="2" max="15"></label>
+            <h3>Data to visualize</h3>
+            
             <br><button type="submit">Save</button>
             <button type="reset">Reset</button>
-            <br>
+            </p>
+            
+
+            <h3>Import/Export/Clear Data</h3>
+            
             <button id="export">Export data</button>
+            
             <p>It is highly recommended that you export any data before importing new data to avoid losing any
                 information. Imported data will be added to existing local data. Thus, repeated imports will add the
                 same time data multiple times.</p>
             <input type="file" id="importFile" accept=".json,.txt">
             <button id="import">Import data from file</button>
             <p id="importResponse"></p>
+            <p>Warning: these cannot be undone. Please be absolutely sure before proceeding.</p>
+            <button id="deleteDay">Clear daily data</button>
+            <br><button id="deleteWeek">Clear weekly ("last n days") data (this will clear yesterday as well)</button>
+            <br><button id="deleteMonth">Clear monthly data</button>
+            <br><button id="deleteAll">Clear all data</button>
+            <p id="deleteResponse"></p>
+
+
         </div>
     </form>
     <script src="options.js" defer></script>

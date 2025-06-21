@@ -165,14 +165,17 @@ async function show(s) {
             sum += sec[i];
 
 
-        var colors = ['#ff595e', '#ff924c', '#ffca3a', '#c5ca30', '#8ac926', '#52a675', '#1982c4', '#5685dd', '#967bb9', '#b5a6c9'];
-        var letters = "0123456789ABCDEF";
+        var colors = ['#ff595e', '#ff924c', '#ffca3a', '#c5ca30', '#8ac926', '#52a675', '#1982c4', '#5685dd', '#967bb9', '#b5a6c9', '#'];
+        // var letters = "0123456789ABCDEF";
+        //temporary solution: recycle colors used previously to make sure no colors very are ugly
         for (let nCs = 0; nCs < numShown - 10; nCs++) {
-            let col = "#";
-            for (let j = 0; j < 6; j++) {
-                col += letters[Math.floor(Math.random() * 16)];
-            }
-            colors.push(col);
+            colors.push(colors[nCs])
+            //generate random colors
+            // let col = "#";
+            // for (let j = 0; j < 6; j++) {
+            //     col += letters[Math.floor(Math.random() * 16)];
+            // }
+            // colors.push(col);
         }
         //        console.log(colors);
 

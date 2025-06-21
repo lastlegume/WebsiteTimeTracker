@@ -7,9 +7,9 @@ function saveOptions(e) {
 }
 function restoreOptions() {
 
-  browser.storage.local.get("numDisplayed").then((result)=>document.querySelector("#numDisplayed").value = result.numDisplayed || 10);
-  browser.storage.local.get("endTime").then((result)=>document.querySelector("#endTime").value = result.endTime || '00:00');
-  browser.storage.local.get("numPastDays").then((result)=>document.querySelector("#numPastDays").value = result.numPastDays || 7);
+  browser.storage.local.get("numDisplayed").then((result) => document.querySelector("#numDisplayed").value = result.numDisplayed || 10);
+  browser.storage.local.get("endTime").then((result) => document.querySelector("#endTime").value = result.endTime || '00:00');
+  browser.storage.local.get("numPastDays").then((result) => document.querySelector("#numPastDays").value = result.numPastDays || 7);
 
 
 }
@@ -18,7 +18,39 @@ document.querySelector("form").addEventListener("submit", saveOptions);
 
 document.getElementById("export").addEventListener("click", exportData);
 document.getElementById("import").addEventListener("click", importData);
+document.getElementById("deleteDay").addEventListener("click", () => clearData("Daily"));
+document.getElementById("deleteWeek").addEventListener("click", () => clearData("Weekly"));
+document.getElementById("deleteMonth").addEventListener("click", () => clearData("Monthly"));
+document.getElementById("deleteAll").addEventListener("click", () => clearData("All"));
 
+async function clearData(type) {
+  if (!confirm("Are you sure you want to proceed?"))
+    return;
+  if (type === "All")
+    browser.storage.local.clear();
+  else {
+    let data = await browser.storage.local.get();
+    data = Object.entries(data);
+    let deletePromises = [];
+    for(let e of data){
+      // console.log(e);
+      let prefix = e[0].substring(0,3);
+      //checks which type and if the prefix should be removed based on the type
+      if(type==="Daily"&&(prefix==="t#d"||prefix==="d##"))
+        browser.storage.local.remove(e[0]);
+      else if(type==="Weekly"&&prefix==="wee")
+        browser.storage.local.remove(e[0]);
+      else if(type==="Monthly"&&prefix==="m##")
+        browser.storage.local.remove(e[0]);
+
+    }
+      await Promise.allSettled(deletePromises);
+
+  }
+  
+  document.getElementById("deleteResponse").innerText = `${type} data cleared.`;
+
+}
 let importResponse = document.getElementById("importResponse");
 
 async function exportData() {
@@ -69,8 +101,8 @@ async function importData() {
   let curMonth = await browser.storage.local.get({ "month": -1 });
   // console.log(data)
   // console.log(data["month"] + " " + curMonth["month"])
-  let isCorrectDate = data["date"] && data["date"] * 1 == curDate["date"]*1;
-  let isCorrectMonth = data["month"] && data["month"] * 1 == curMonth["month"]*1;
+  let isCorrectDate = data["date"] && data["date"] * 1 == curDate["date"] * 1;
+  let isCorrectMonth = data["month"] && data["month"] * 1 == curMonth["month"] * 1;
   data = Object.entries(data);
 
 
@@ -79,12 +111,13 @@ async function importData() {
       promises.push(browser.storage.local.get(k));
       validData.push([k, v]);
       //  console.log(k+" "+v);
-    }   
+    }
   }
 
 
   promises = await Promise.all(promises)
   let setPromises = [];
+  //promimses is an array of key value pairs that were collected from looking up each key in the import in storage
   for (let i = 0; i < promises.length; i++) {
     //check if the key already exists
     if (typeof promises[i] === "object" && Object.keys(promises[i]).length !== 0) {
@@ -119,13 +152,18 @@ async function importData() {
         setPromises.push(browser.storage.local.set({
           [validData[i][0]]: curWeek
         }));
-      } else {
+      } else if (validData[i][0] === "initdate") {
+        setPromises.push(browser.storage.local.set({
+          [validData[i][0]]: validData[i][1]
+        }));
+      }
+      else {
         //sum the import and storage values if not week
         setPromises.push(browser.storage.local.set({
           [validData[i][0]]: (1 * validData[i][1] + 1 * promises[i][validData[i][0]])
         }));
       }
-    //if the key doesn't exist, add the whole object from the export into storage
+      //if the key doesn't exist, add the whole object from the export into storage
     } else {
       setPromises.push(browser.storage.local.set({
         [validData[i][0]]: validData[i][1]
@@ -134,7 +172,7 @@ async function importData() {
   }
   await Promise.allSettled(setPromises);
 
-  importResponse.innerText = "Import complete. "+(isCorrectDate?"Imported data is from the same day, so the data was added to the daily time as well. ":"")+(isCorrectMonth?"Imported data is from the same month, so the data was added to the month's time as well." :"");
+  importResponse.innerText = "Import complete. " + (isCorrectDate ? "Imported data is from the same day, so the data was added to the daily time as well. " : "") + (isCorrectMonth ? "Imported data is from the same month, so the data was added to the month's time as well." : "");
   importFileInput.value = "";
 
   function isValidKey(k) {
