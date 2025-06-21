@@ -63,6 +63,8 @@ async function logTabs(tabs) {
     try {
         let endTime = await browser.storage.local.get({ 'endTime': '00:00' });
         var [EThours, ETminutes] = endTime['endTime'].split(':');
+        let numPastDays = await browser.storage.local.get({ 'numPastDays': '7' });
+
     } catch (error) {
         console.log(error);
     }
@@ -127,10 +129,10 @@ async function logTabs(tabs) {
                 if (j.substring(0, 3) === "y##") {
                     browser.storage.local.remove([j]);
                 }
-                //clears data from the days more than 10 days before the current day
+                //clears data from the days more than numPastDays (plus a bit) days before the current day
                 if (j.substring(0, 4) === 'week') {
                     let tempDate = j.substring(4);
-                    if (tempDate - numDate < -10)
+                    if (tempDate - numDate < Math.floor(-1.2*numPastDays))
                         browser.storage.local.remove([j]);
                 }
             }

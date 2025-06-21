@@ -2,7 +2,8 @@ function saveOptions(e) {
   e.preventDefault();
   browser.storage.local.set({
     'numDisplayed': document.querySelector("#numDisplayed").value,
-    'endTime': document.querySelector("#endTime").value
+    'endTime': document.querySelector("#endTime").value,
+    'numPastDays': document.querySelector("#numPastDays").value
   });
 }
 function restoreOptions() {
@@ -21,6 +22,8 @@ document.getElementById("import").addEventListener("click", importData);
 document.getElementById("deleteDay").addEventListener("click", () => clearData("Daily"));
 document.getElementById("deleteWeek").addEventListener("click", () => clearData("Weekly"));
 document.getElementById("deleteMonth").addEventListener("click", () => clearData("Monthly"));
+document.getElementById("deleteByHours").addEventListener("click", () => clearData("Usage by hour"));
+document.getElementById("deleteSites").addEventListener("click", () => clearData("Usage by website"));
 document.getElementById("deleteAll").addEventListener("click", () => clearData("All"));
 
 async function clearData(type) {
@@ -32,22 +35,25 @@ async function clearData(type) {
     let data = await browser.storage.local.get();
     data = Object.entries(data);
     let deletePromises = [];
-    for(let e of data){
+    for (let e of data) {
       // console.log(e);
-      let prefix = e[0].substring(0,3);
+      let prefix = e[0].substring(0, 3);
       //checks which type and if the prefix should be removed based on the type
-      if(type==="Daily"&&(prefix==="t#d"||prefix==="d##"))
+      if (type === "Daily" && (prefix === "t#d" || prefix === "d##"))
         browser.storage.local.remove(e[0]);
-      else if(type==="Weekly"&&prefix==="wee")
+      else if (type === "Weekly" && prefix === "wee")
         browser.storage.local.remove(e[0]);
-      else if(type==="Monthly"&&prefix==="m##")
+      else if (type === "Monthly" && prefix === "m##")
         browser.storage.local.remove(e[0]);
-
+      else if (type === "Usage by hour" && (prefix === "t##"||prefix === "t#d"))
+        browser.storage.local.remove(e[0]);
+      else if (type === "Usage by website" && (prefix === "m##"||prefix === "w##"||prefix === "d##"||prefix === "wee"))
+        browser.storage.local.remove(e[0]);
     }
-      await Promise.allSettled(deletePromises);
+    await Promise.allSettled(deletePromises);
 
   }
-  
+
   document.getElementById("deleteResponse").innerText = `${type} data cleared.`;
 
 }

@@ -116,6 +116,9 @@ async function show(s) {
     if (canvas != null)
         canvas.parentNode.removeChild(canvas);
     var numShown = await browser.storage.local.get("numDisplayed");
+    if(typeof numShown !== "number")
+        numShown = 10;
+    numShown = Math.max(3,Math.min(numShown,50))
     numShown = numShown['numDisplayed'] - 1;
     //  console.log(numShown);
     if (isNaN(numShown))
