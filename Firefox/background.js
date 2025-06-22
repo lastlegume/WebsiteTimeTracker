@@ -54,7 +54,7 @@ The extension stores information about time spent. Because of the nature of the 
 
 
 async function logTabs(tabs) {
-    if(currentId<0)
+    if (currentId < 0)
         return;
     let ta = new URL(tabs[0].url);
     let t = ta.hostname;
@@ -64,54 +64,90 @@ async function logTabs(tabs) {
         let endTime = await browser.storage.local.get({ 'endTime': '00:00' });
         var [EThours, ETminutes] = endTime['endTime'].split(':');
         var numPastDays = await browser.storage.local.get({ 'numPastDays': '7' });
+        var collect = await browser.storage.local.get({ "collect": ["today", "lastNDays", "month", "total", "dayByHour", "totalByHour"] });
 
     } catch (error) {
         console.log(error);
     }
+    collect = collect.collect;
+    //create an array of true false values for what needs to be collected
+    // booleans are in this order
+    // "today"
+    // "lastNDays"
+    // "month"
+    // "total"
+    // "dayByHour"
+    // "totalByHour"
+    let shouldBeCollected = Array(6).fill(false);
+    for (let i = 0; i < collect.length; i++) {
+        if (collect[i] === "today")
+            shouldBeCollected[0] = true;
+        else if (collect[i] === "lastNDays")
+            shouldBeCollected[1] = true;
+        else if (collect[i] === "month")
+            shouldBeCollected[2] = true;
+        else if (collect[i] === "total")
+            shouldBeCollected[3] = true;
+        else if (collect[i] === "dayByHour")
+            shouldBeCollected[4] = true;
+        else if (collect[i] === "totalByHour")
+            shouldBeCollected[5] = true;
+    }
+
     //change to make days 'Tfactor'x faster 
     let Tfactor = 1;//24 * 60 * 2;
     var numDate = Math.floor(Tfactor * (date - ((EThours * 60 + ETminutes * 1) + date.getTimezoneOffset()) * 60000) / 86400000);
     var numMonth = date.getMonth();
     try {
-        let hour = "t##" + date.getHours();
-        let cHour = await browser.storage.local.get({ [hour]: 0 });
-        browser.storage.local.set({ [hour]: cHour[hour] + 1 });
-        hour = "t#d" + date.getHours();
-        cHour = await browser.storage.local.get({ [hour]: 0 });
-        browser.storage.local.set({ [hour]: cHour[hour] + 1 });
+        if (shouldBeCollected[5]) {
+            let hour = "t##" + date.getHours();
+            let cHour = await browser.storage.local.get({ [hour]: 0 });
+            browser.storage.local.set({ [hour]: cHour[hour] + 1 });
+        }
+        if (shouldBeCollected[4]) {
+            let hour = "t#d" + date.getHours();
+            let cHour = await browser.storage.local.get({ [hour]: 0 });
+            browser.storage.local.set({ [hour]: cHour[hour] + 1 });
+        }
     }
     catch (error) {
         console.log(error);
     }
 
     if (t != "") {
-        t = "w##" + t;
-        try {
-            let time = await browser.storage.local.get({ [t]: 0 });
-            browser.storage.local.set({ [t]: time[t] + 1 });
+        if (shouldBeCollected[3]) {
+            t = "w##" + t;
+            try {
+                let time = await browser.storage.local.get({ [t]: 0 });
+                browser.storage.local.set({ [t]: time[t] + 1 });
+            }
+            catch (error) {
+                console.log(error);
+            }
         }
-        catch (error) {
-            console.log(error);
-        }
+        if (shouldBeCollected[0]) {
 
-        t = "d##" + t.substring(3);
-        try {
-            let dtime = await browser.storage.local.get({ [t]: 0 });
-            browser.storage.local.set({ [t]: dtime[t] + 1 });
-            draw(dtime[t]);
+            t = "d##" + t.substring(3);
+            try {
+                let dtime = await browser.storage.local.get({ [t]: 0 });
+                browser.storage.local.set({ [t]: dtime[t] + 1 });
+                draw(dtime[t]);
+            }
+            catch (error) {
+                console.log(error);
+            }
         }
-        catch (error) {
-            console.log(error);
-        }
-        t = "m##" + t.substring(3);
-        try {
-            let mtime = await browser.storage.local.get({ [t]: 0 });
-            browser.storage.local.set({ [t]: mtime[t] + 1 });
-        }
-        catch (error) {
-            console.log(error);
-        }
+        if (shouldBeCollected[2]) {
 
+            t = "m##" + t.substring(3);
+            try {
+                let mtime = await browser.storage.local.get({ [t]: 0 });
+                browser.storage.local.set({ [t]: mtime[t] + 1 });
+            }
+            catch (error) {
+                console.log(error);
+            }
+        }
     }
     try {
         let temp = await browser.storage.local.get({ 'initdate': numDate });
@@ -126,13 +162,15 @@ async function logTabs(tabs) {
             for (let i = 0; i < vals.length; i++) {
                 let j = vals[i];
                 // removes relics from a previous version 
+                // probably unnecessary now but I think it's fine to keep in
                 if (j.substring(0, 3) === "y##") {
                     browser.storage.local.remove([j]);
                 }
                 //clears data from the days more than numPastDays (plus a bit) days before the current day
+                //mostly a failsafe as old data should be cleared below when the week(numDate - numPastDays) is cleared
                 if (j.substring(0, 4) === 'week') {
                     let tempDate = j.substring(4);
-                    if (tempDate - numDate < Math.floor(-1.2*numPastDays))
+                    if (tempDate - numDate < Math.floor(-1.2 * numPastDays))
                         browser.storage.local.remove([j]);
                 }
             }
@@ -152,17 +190,19 @@ async function logTabs(tabs) {
                 }
             }
             //console.log(week);
-            //it would make a lot more sense if 
-            var timeForWeek = await browser.storage.local.get({ ['week' + numDate]: [] });
-            // console.log(Object.values(timeForWeek));
-            if (Object.values(timeForWeek).length > 0) {
-                //   console.log("IMPORTANT MERGE");
-                //  console.log(week);
-                // console.log(Object.values(timeForWeek)[0]);
-                week = combine(week, Object.values(timeForWeek)[0]);
+            if (shouldBeCollected[1]) {
+                //it would make a lot more sense if this was numdate - 1 so that the number following the week is the date when all of the data is collected, but instead it's the day after the date when the data was collected
+                var timeForWeek = await browser.storage.local.get({ ['week' + numDate]: [] });
+                // console.log(Object.values(timeForWeek));
+                if (Object.values(timeForWeek).length > 0) {
+                    //   console.log("IMPORTANT MERGE");
+                    //  console.log(week);
+                    // console.log(Object.values(timeForWeek)[0]);
+                    week = combine(week, Object.values(timeForWeek)[0]);
+                }
+                browser.storage.local.set({ ['week' + numDate]: week });
+                browser.storage.local.remove(['week' + (numDate - numPastDays)]);
             }
-            browser.storage.local.set({ ['week' + numDate]: week });
-            browser.storage.local.remove(['week' + (numDate - numPastDays)]);
         }
     }
     catch (error) {

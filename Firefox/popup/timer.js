@@ -9,6 +9,8 @@ const havgButton = document.getElementById("Haverage");
 const hdayButton = document.getElementById("Hday");
 const options = document.getElementById("options");
 //show('wTotal Time for Each Website')
+var visualize = await browser.storage.local.get({ "visualize": ["today", "yesterday", "lastNDays", "month", "average", "total", "dayByHour", "averageByHour", "totalByHour"] });
+
 show('wTime for Each Website Today')
 totalButton.addEventListener('click', () => show('wTotal Time for Each Website'));
 avgButton.addEventListener('click', () => show('wAverage Time for Each Website'));

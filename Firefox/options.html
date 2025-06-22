@@ -16,10 +16,40 @@
             <label>Number of Sites Displayed (default: 10) <input type="number" id="numDisplayed" value=10 min="3"
                     max="50"></label>
             <br><label>Day End Time (default: 12:00 AM) <input type="time" id="endTime" value=00:00></label>
-            <br><label title="Note that shrinking this number may permanently delete data about which sites were used on specific days in the past. Importantly, this does not affect the monthly or total time spent on websites. For example, if this number is changed to 4, data for days 5-7 days in the past will likely be deleted permanently.">Number of days shown in the "Last n days" tab (default: 7) <input type="number" id="numPastDays"
-                    value=7 min="2" max="15"></label>
-            <h3>Data to visualize</h3>
-                
+            <br><label
+                title="Note that shrinking this number may permanently delete data about which sites were used on specific days in the past. Importantly, this does not affect the monthly or total time spent on websites. For example, if this number is changed to 4, data for days 5-7 days in the past will likely be deleted permanently.">Number
+                of days shown in the "Last n days" tab (default: 7) <input type="number" id="numPastDays" value=7
+                    min="2" max="15"></label>
+            <label for="visualize">
+                <h3>Data to visualize</h3>
+            </label>
+            <p>Choose which buttons appear at the top of the extention popup window. Data will still be collected for
+                unselected options here, but the option to visualize them will not be visible in the popup. To disable
+                collection, see the section below.</p>
+            <select id="visualize" multiple>
+                <option selected value="today">Today</option>
+                <option selected value="yesterday">Yesterday</option>
+                <option selected value="lastNDays">Last n days</option>
+                <option selected value="month">Month</option>
+                <option selected value="average">Average</option>
+                <option selected value="total">Total</option>
+                <option selected value="dayByHour">Today by hour</option>
+                <option selected value="averageByHour">Average by hour</option>
+                <option selected value="totalByHour">Total by hour</option>
+            </select>
+            <label for="collect"></label>
+            <h3>Data collected</h3></label>
+            <p>Warning: when disabled, no data will be collected, meaning that if reenabled, anything that would have
+                been collected while disabled will be missing. To delete collected data, see below.</p>
+            <select id="collect" multiple>
+                <option selected value="today">Today</option>
+                <option selected value="lastNDays">Yesterday/Last n days</option>
+                <option selected value="month">Month</option>
+                <option selected value="total">Total</option>
+                <option selected value="dayByHour">Today by hour</option>
+                <option selected value="totalByHour">Total by hour</option>
+            </select>
+            <br>
             <br><button type="submit">Save</button>
             <button type="reset">Reset</button>
             </p>
@@ -40,7 +70,8 @@
             <br><button id="deleteWeek">Clear weekly ("last n days") data (this will clear yesterday as well)</button>
             <br><button id="deleteMonth">Clear monthly data</button>
             <br><button id="deleteByHours">Clear all data about usage per hour (everything that says "by hour")</button>
-            <br><button id="deleteSites">Clear all data about usage per website (everything that doesn't say "by hour")</button>
+            <br><button id="deleteSites">Clear all data about usage per website (everything that doesn't say "by
+                hour")</button>
             <br><button id="deleteAll">Clear all data</button>
             <p id="deleteResponse"></p>
 

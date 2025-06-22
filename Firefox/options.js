@@ -1,9 +1,23 @@
 function saveOptions(e) {
   e.preventDefault();
+  let visualizeOptions = document.getElementById("visualize").selectedOptions;
+  let collectOptions = document.getElementById("collect").selectedOptions;
+  let visualize = [];
+  let collect = [];
+
+  for (let i = 0; i < visualizeOptions.length; i++) {
+    visualize.push(visualizeOptions[i].value);
+  }
+  for (let i = 0; i < collectOptions.length; i++) {
+    collect.push(collectOptions[i].value);
+  }
+
   browser.storage.local.set({
     'numDisplayed': document.querySelector("#numDisplayed").value,
     'endTime': document.querySelector("#endTime").value,
-    'numPastDays': document.querySelector("#numPastDays").value
+    'numPastDays': document.querySelector("#numPastDays").value,
+    'visualize': visualize,
+    'collect': collect
   });
 }
 function restoreOptions() {
@@ -11,7 +25,14 @@ function restoreOptions() {
   browser.storage.local.get("numDisplayed").then((result) => document.querySelector("#numDisplayed").value = result.numDisplayed || 10);
   browser.storage.local.get("endTime").then((result) => document.querySelector("#endTime").value = result.endTime || '00:00');
   browser.storage.local.get("numPastDays").then((result) => document.querySelector("#numPastDays").value = result.numPastDays || 7);
-
+  browser.storage.local.get("visualize").then(function (arr) {
+    if (arr.visualize)
+      restoreSelect(arr.visualize, "visualize")
+  });
+  browser.storage.local.get("collect").then(function (arr) {
+    if (arr.collect)
+      restoreSelect(arr.collect, "collect")
+  });
 
 }
 document.addEventListener("DOMContentLoaded", restoreOptions);
@@ -45,9 +66,9 @@ async function clearData(type) {
         browser.storage.local.remove(e[0]);
       else if (type === "Monthly" && prefix === "m##")
         browser.storage.local.remove(e[0]);
-      else if (type === "Usage by hour" && (prefix === "t##"||prefix === "t#d"))
+      else if (type === "Usage by hour" && (prefix === "t##" || prefix === "t#d"))
         browser.storage.local.remove(e[0]);
-      else if (type === "Usage by website" && (prefix === "m##"||prefix === "w##"||prefix === "d##"||prefix === "wee"))
+      else if (type === "Usage by website" && (prefix === "m##" || prefix === "w##" || prefix === "d##" || prefix === "wee"))
         browser.storage.local.remove(e[0]);
     }
     await Promise.allSettled(deletePromises);
@@ -190,3 +211,13 @@ async function importData() {
   }
 }
 
+function restoreSelect(arr, id) {
+  let select = document.getElementById(id);
+  let options = select.options;
+  for (let i = 0; i < options.length; i++)
+    if (arr.includes(options[i].value))
+      options[i].selected = true;
+    else
+      options[i].selected = false;
+
+}
