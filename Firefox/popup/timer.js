@@ -9,7 +9,8 @@ const havgButton = document.getElementById("Haverage");
 const hdayButton = document.getElementById("Hday");
 const options = document.getElementById("options");
 //show('wTotal Time for Each Website')
-var visualize = await browser.storage.local.get({ "visualize": ["today", "yesterday", "lastNDays", "month", "average", "total", "dayByHour", "averageByHour", "totalByHour"] });
+let graph;
+browser.storage.local.get({ "visualize": ["today", "yesterday", "lastNDays", "month", "average", "total", "dayByHour", "averageByHour", "totalByHour"] }).then((v) => configureButtons(v));
 
 show('wTime for Each Website Today')
 totalButton.addEventListener('click', () => show('wTotal Time for Each Website'));
@@ -130,33 +131,26 @@ async function show(s) {
     }
     //  console.log(vals);
 
-    var canvas = document.getElementById("myChart");
+    var canvas = document.getElementById("chart");
+    if(graph)
+        graph.destroy();
+    //canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+
     let numDays = curDate - initDate;
     if (numDays <= 0) {
         numDays = 1;
         error.textContent = "Error: Unable to calculate total number of days";
 
     }
-    if (canvas != null)
-        canvas.parentNode.removeChild(canvas);
     var numShown = await browser.storage.local.get("numDisplayed");
     numShown = numShown['numDisplayed'] - 1;
-    //  console.log(numShown);
     if (isNaN(numShown))
         numShown = 9;
     numShown = Math.max(2, Math.min(numShown, 49))
 
 
-    const can = document.createElement('canvas');
-    can.id = "myChart";
-    can.width = "500";
-    can.height = "300";
-    canvas = document.getElementById("table");
-    if (canvas != null)
-        canvas.parentNode.removeChild(canvas);
-    const table = document.createElement('table');
-    table.id = "table";
-    document.body.appendChild(can);
+    let table = document.getElementById("table");
+    table.innerHTML="";
     if (type.substring(0, 1) === "w") {
         vals.sort((a, b) => { return b[1] - a[1] });
         if (type.includes("Average") && numDays != 0) {
@@ -210,7 +204,7 @@ async function show(s) {
         type = createReadableTime(sum) + " - " + type.substring(1);
         for (let i = 0; i < numShown + 1 && i < sec.length; i++)
             sec[i] = ((sec[i] / sum) * 100).toFixed(2);
-        const graph = new Chart(can, {
+        graph = new Chart(canvas, {
             type: "pie",
             data: {
                 labels: lab,
@@ -267,7 +261,7 @@ async function show(s) {
         let times = [];
         let secs = [];
         vals.sort((a, b) => { return a[0] * 1 - b[0] * 1 });
-        console.log(vals);
+        //console.log(vals);
         if (type.includes("Average") && numDays != 0) {
             for (let i = 0; i < vals.length; i++)
                 vals[i] = [vals[i][0], Math.round(vals[i][1] / numDays)];
@@ -287,7 +281,7 @@ async function show(s) {
                 secs[i] = ((secs[i] / sum) * 100).toFixed(2);
         }
         let colors = ['#FF0000', '#FF4000', '#FF8000', '#FFC000', '#FFFF00', '#D5FF00', '#AAFF00', '#80FF00', '#40FF00', '#00FF00', '#00FF40', '#00FF80', '#00FFC0', '#00FFFF', '#00C0FF', '#0080FF', '#0040FF', '#0000FF', '#4000FF', '#8000FF', '#C000FF', '#FF00FF', '#FF00C0', '#FF0080'];
-        const graph = new Chart(can, {
+        graph = new Chart(canvas, {
             type: "bar",
             data: {
                 labels: times,
@@ -414,4 +408,15 @@ function getSiteIndex(arr, key) {
 function open() {
     let page = browser.runtime.openOptionsPage();
     page.then();
+}
+
+function configureButtons(v) {
+    let visualize = v.visualize;
+    let buttons = document.getElementsByClassName("btn");
+    for (let i = 0; i < buttons.length; i++) {
+        if (visualize.includes(buttons[i].name))
+            buttons[i].classList.remove("hide");
+        else
+            buttons[i].classList.add("hide");
+    }
 }
